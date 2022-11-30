@@ -1,7 +1,9 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:redux/redux.dart';
 
+import 'actions.dart';
 import 'reducer.dart';
 
 late final Store<int> store;
@@ -36,37 +38,70 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '0',
-              style: Theme.of(context).textTheme.headline1,
-            ),
-            const SizedBox(height: 50.0),
-            Row(
+        child: StoreConnector<int, _ViewModel>(
+          distinct: true,
+          converter: (Store<int> store) => _ViewModel.fromStore(store),
+          builder: (BuildContext context, _ViewModel vm) {
+            print('Building...');
+            return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                FloatingActionButton(
-                  onPressed: () {},
-                  child: const Text(
-                    '+1',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                Text(
+                  '${vm.counter}',
+                  style: Theme.of(context).textTheme.headline1,
                 ),
-                const SizedBox(width: 10.0),
-                FloatingActionButton(
-                  onPressed: () {},
-                  child: const Text(
-                    '+0',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                const SizedBox(height: 50.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () {
+                        vm.incrementOne();
+                      },
+                      child: const Text(
+                        '+1',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
+                    ),
+                    const SizedBox(width: 10.0),
+                    FloatingActionButton(
+                      onPressed: () {
+                        vm.incrementZero();
+                      },
+                      child: const Text(
+                        '+0',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
+}
+
+class _ViewModel extends Equatable {
+  final int counter;
+  final VoidCallback incrementOne;
+  final VoidCallback incrementZero;
+  const _ViewModel({
+    required this.counter,
+    required this.incrementOne,
+    required this.incrementZero,
+  });
+
+  static fromStore(Store<int> store) {
+    return _ViewModel(
+      counter: store.state,
+      incrementOne: () => store.dispatch(IncrementOneAction()),
+      incrementZero: () => store.dispatch(IncrementZeroAction()),
+    );
+  }
+
+  @override
+  List<Object> get props => [counter];
 }
